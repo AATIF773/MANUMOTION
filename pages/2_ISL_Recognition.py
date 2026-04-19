@@ -7,24 +7,27 @@ import os
 import av
 from streamlit_webrtc import webrtc_streamer, RTCConfiguration
 
-# --- 1. SETUP ---
-st.set_page_config(page_title="ISL Recognition · MANUMOTION", page_icon="🤟", layout="wide")
+st.set_page_config(page_title="ISL Recognition · MANUMOTION", layout="wide")
 
-RTC_CONFIG = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302", "stun:stun.services.mozilla.com"]}]})
-
-# --- 2. YOUR ORIGINAL CSS (RESTORED) ---
+DARK_MODE_CSS = """
+<style>
+body { background: #07071a !important; color: #e8e8f5 !important; }
+.pred-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:28px 20px; text-align:center; }
+.pred-letter { font-size:7rem; font-weight:900; background:linear-gradient(135deg,#34d399,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.alph-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.alph-cell { border-radius:10px; padding:8px 4px; text-align:center; background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.05); color:#3a3a5a; }
+</style>
+"""
 st.markdown(DARK_MODE_CSS, unsafe_allow_html=True)
 
-# --- 3. LOGIC ---
 def video_frame_callback(frame):
     img = frame.to_ndarray(format="bgr24")
     img = cv2.flip(img, 1)
-    # Your recognition logic here updates session state...
+    # Your prediction logic here...
     st.session_state["isl_ltr"] = "A" 
     st.session_state["isl_conf"] = 90
     return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# --- 4. YOUR ORIGINAL UI LAYOUT ---
 st.title("🤟 ISL Recognition")
 
 col_vid, col_pred, col_alpha = st.columns([5, 3, 2], gap="medium")
@@ -34,19 +37,16 @@ with col_vid:
     webrtc_streamer(
         key="isl-stream",
         video_frame_callback=video_frame_callback,
-        rtc_configuration=RTC_CONFIG,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302", "stun:stun.services.mozilla.com"]}]},
         media_stream_constraints={"video": True, "audio": False}
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_pred:
-    # Your original Detected Sign card
     ltr = st.session_state.get("isl_ltr", "—")
-    cf = st.session_state.get("isl_conf", 0)
-    st.markdown(f'<div class="pred-card"><div class="pred-letter">{ltr}</div><div>{cf}% Confidence</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="pred-card"><div class="pred-letter">{ltr}</div><div>Confidence: {st.session_state.get("isl_conf", 0)}%</div></div>', unsafe_allow_html=True)
 
 with col_alpha:
-    # Your original A-Z Reference panel
     st.markdown('<div class="alph-panel">', unsafe_allow_html=True)
     cells = "".join([f"<div class='alph-cell'>{c}</div>" for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
     st.markdown(f'<div class="alph-grid">{cells}</div></div>', unsafe_allow_html=True)
