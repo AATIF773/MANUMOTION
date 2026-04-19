@@ -1,3 +1,16 @@
+import sys
+from unittest.mock import MagicMock
+
+# --- CRITICAL FIX: Ignore pygame on the cloud server ---
+try:
+    import pygame
+except ImportError:
+    sys.modules['pygame'] = MagicMock()
+    sys.modules['pygame.mixer'] = MagicMock()
+
+import streamlit as st
+# ... [Paste the REST of your original ISL code here] ...
+
 import streamlit as st
 import streamlit.components.v1 as components
 import cv2
