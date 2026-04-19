@@ -1,11 +1,14 @@
 import sys
 from unittest.mock import MagicMock
 
-# Trick the cloud into ignoring pygame
+# Trick the cloud into ignoring desktop-only libraries
 try:
-    import pygame
+    import pynput
+    import pyautogui
 except ImportError:
-    sys.modules['pygame'] = MagicMock()
+    sys.modules['pynput'] = MagicMock()
+    sys.modules['pynput.mouse'] = MagicMock()
+    sys.modules['pyautogui'] = MagicMock()
 
 
 import pyautogui
