@@ -1,17 +1,11 @@
-import cv2
-import mediapipe as mp
-import numpy as np
 import sys
 from unittest.mock import MagicMock
 
-# Trick the cloud into ignoring desktop-only libraries
+# Trick the cloud into ignoring pygame
 try:
-    import pynput
-    import pyautogui
+    import pygame
 except ImportError:
-    sys.modules['pynput'] = MagicMock()
-    sys.modules['pynput.mouse'] = MagicMock()
-    sys.modules['pyautogui'] = MagicMock()
+    sys.modules['pygame'] = MagicMock()
 
 
 import pyautogui
