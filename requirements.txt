@@ -1,7 +1,8 @@
 streamlit
 streamlit-webrtc
 opencv-contrib-python-headless
-mediapipe
+mediapipe==0.10.11
+protobuf==3.20.3
 numpy
 scikit-learn
 joblib
