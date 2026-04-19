@@ -1,0 +1,11 @@
+# Virtual Environments
+islenv/
+venv/
+env/
+
+# Cache files
+__pycache__/
+*.pyc
+
+# Datasets
+ISL/dataset/
