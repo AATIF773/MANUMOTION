@@ -7,6 +7,16 @@ import time
 import os
 import sys
 
+#HANDLING pyautogui
+import sys
+from unittest.mock import MagicMock
+
+# Trick the app into thinking pyautogui exists on the cloud server
+try:
+    import pyautogui
+except ImportError:
+    sys.modules['pyautogui'] = MagicMock()
+
 st.set_page_config(
     page_title="Hand Gesture Control · MANUMOTION",
     page_icon="✋",
