@@ -1,6 +1,19 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import sys
+from unittest.mock import MagicMock
+
+# Trick the cloud into ignoring desktop-only libraries
+try:
+    import pynput
+    import pyautogui
+except ImportError:
+    sys.modules['pynput'] = MagicMock()
+    sys.modules['pynput.mouse'] = MagicMock()
+    sys.modules['pyautogui'] = MagicMock()
+
+
 import pyautogui
 import time
 import os
@@ -8,15 +21,7 @@ from datetime import datetime
 from pynput.mouse import Button, Controller
 import util  # util.py is in the same directory
 
-# HANDLING pyautogui
-import sys
-from unittest.mock import MagicMock
 
-# Trick the app into thinking pyautogui exists on the cloud server
-try:
-    import pyautogui
-except ImportError:
-    sys.modules['pyautogui'] = MagicMock()
 # ─────────────────────────────────────────────────────────────────
 # GLOBAL STATE FOR GESTURE LOGIC
 # ─────────────────────────────────────────────────────────────────
