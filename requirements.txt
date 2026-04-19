@@ -1,33 +1,10 @@
-# ==========================================
-# CORE VISION & MACHINE LEARNING
-# ==========================================
-mediapipe==0.10.8
-# CHANGE: Use 'headless' for cloud servers (no GUI errors)
-opencv-python-headless==4.10.0.84
-numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.5.1
-joblib==1.4.2
-
-# ==========================================
-# WEB DASHBOARD & STREAMING (NEW)
-# ==========================================
-streamlit
-streamlit-webrtc    # <--- ADD THIS for browser camera access
-av                  # <--- ADD THIS to handle video frames
-
-# ==========================================
-# ISL TRANSLATOR MODULE
-# ==========================================
-gtts
-pygame
-seaborn==0.13.2
+@@ -3,9 +3,6 @@ streamlit-webrtc
+opencv-python-headless
+mediapipe
+numpy
+pandas
+scikit-learn
+joblib
+seaborn
 matplotlib
-
-# ==========================================
-# SYSTEM CONTROLS (NOTICE)
-# ==========================================
-# pyautogui
-# pynput 
-# NOTE: These will NOT work on the web. 
-# Keep them only if you still run the project locally.
+av
