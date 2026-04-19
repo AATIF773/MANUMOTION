@@ -54,7 +54,7 @@ def play_audio(letter: str):
             pass
 
 MODEL_CFG = {
-    "Ensemble":     {"file": "ensemble_model.pkl", "scaler": "scaler40.pkl", "mode": "dist40"},
+    "Ensemble":      {"file": "ensemble_model.pkl", "scaler": "scaler40.pkl", "mode": "dist40"},
     "Random Forest":{"file": "rf_model.pkl",       "scaler": "scaler.pkl",   "mode": "raw126"},
     "SVM":          {"file": "svm_model.pkl",      "scaler": "scaler.pkl",   "mode": "raw126"},
     "KNN":          {"file": "knn_model.pkl",      "scaler": "scaler.pkl",   "mode": "raw126"},
@@ -278,7 +278,7 @@ except Exception as e:
     st.error(f"❌ Could not load **{sel_model}** — {e}")
 
 # ─────────────────────────────────────────────────────────────────
-# 5. WEBRTC SURGERY (FIX FOR CAPTURING)
+# 5. WEBRTC SURGERY (FIXED RESOLUTION TO PREVENT FREEZING)
 # ─────────────────────────────────────────────────────────────────
 isl_queue = deque(maxlen=15)
 
@@ -347,7 +347,7 @@ if not st.session_state.isl_cam_on:
                     st.session_state.isl_cam_on = True
                     st.rerun()
 else:
-    st.markdown("""<div class="info-strip">⚡ <strong>Webcam is active.</strong> Hold your ISL sign clearly in front of the camera.</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="info-strip" style="position:relative;z-index:10;">⚡ <strong>Webcam is active.</strong> Hold your ISL sign clearly in front of the camera.</div>""", unsafe_allow_html=True)
     col_vid, col_pred, col_alpha = st.columns([5, 3, 2], gap="medium")
 
     with col_vid:
@@ -357,10 +357,22 @@ else:
             key="isl-recognition",
             mode=WebRtcMode.SENDRECV,
             rtc_configuration=RTCConfiguration(
-                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.services.mozilla.com"]}]}
+                {"iceServers": [
+                    {"urls": ["stun:stun.l.google.com:19302"]},
+                    {"urls": ["stun:stun1.l.google.com:19302"]},
+                    {"urls": ["stun:stun.services.mozilla.com"]}
+                ]}
             ),
             video_frame_callback=video_frame_callback,
-            media_stream_constraints={"video": True, "audio": False},
+            # 🚀 STABILITY FIX: Forced 480x360 at 15 FPS to stop freezing
+            media_stream_constraints={
+                "video": {
+                    "width": {"ideal": 480},
+                    "height": {"ideal": 360},
+                    "frameRate": {"ideal": 15} 
+                },
+                "audio": False,
+            },
             async_processing=True,
         )
 
