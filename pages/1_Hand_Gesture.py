@@ -9,7 +9,7 @@ import sys
 import av
 from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
 
-# --- 1. CLOUD FIX: MOCK PYAUTOGUI ---
+# 1. CLOUD MOCKS
 from unittest.mock import MagicMock
 try:
     import pyautogui
@@ -18,22 +18,32 @@ except ImportError:
     mock_py.size.return_value = (1920, 1080)
     sys.modules['pyautogui'] = mock_py
 
-# --- 2. CONFIG & PATHS (UNTOUCHED) ---
-st.set_page_config(page_title="Hand Gesture Control · MANUMOTION", page_icon="✋", layout="wide", initial_sidebar_state="collapsed")
+# 2. PATHS & LOGIC
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(ROOT, "Hand-Gesture"))
 import main as gesture_main
 
-# --- 3. THE CONNECTION FIX (STUN SERVERS) ---
-RTC_CONFIG = RTCConfiguration(
-    {"iceServers": [
-        {"urls": ["stun:stun.l.google.com:19302"]},
-        {"urls": ["stun:stun1.l.google.com:19302"]},
-        {"urls": ["stun:stun.services.mozilla.com"]}
-    ]}
-)
+st.set_page_config(page_title="Hand Gesture Control · MANUMOTION", page_icon="✋", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 4. WEBRTC CALLBACK (PROCESSES YOUR LOGIC) ---
+# RESTORE YOUR FULL ORIGINAL CSS
+DARK_MODE_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body, html, [data-testid="stApp"], .stApp, [data-testid="stAppViewContainer"] { background: #07071a !important; font-family: 'Outfit', sans-serif !important; color: #e8e8f5 !important; }
+[data-testid="stHeader"],[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stSidebar"],footer, #MainMenu { display: none !important; }
+.block-container, [data-testid="stAppViewBlockContainer"] { padding: 32px 48px 48px !important; max-width: 100% !important; }
+.vid-panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; overflow: hidden; }
+.sb-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
+.sb-val { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg,#818cf8,#38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hg-brand { font-size: 1rem; font-weight: 800; background: linear-gradient(135deg,#c4b5fd,#38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gleg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+.gleg-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 8px 4px; text-align: center; }
+</style>
+"""
+st.markdown(DARK_MODE_CSS, unsafe_allow_html=True)
+
+# 3. WEBRTC CALLBACK
 def video_frame_callback(frame):
     img = frame.to_ndarray(format="bgr24")
     img = cv2.flip(img, 1)
@@ -41,34 +51,23 @@ def video_frame_callback(frame):
     
     mp_h = mp.solutions.hands
     with mp_h.Hands(model_complexity=0, min_detection_confidence=0.7) as hands:
-        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        result = hands.process(rgb)
-        gesture_text = "—"
-        
+        result = hands.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         if result.multi_hand_landmarks:
             hnd = result.multi_hand_landmarks[0]
-            mp.solutions.drawing_utils.draw_landmarks(img, hnd, mp_h.HAND_CONNECTIONS)
             lml = [(int(lm.x * w), int(lm.y * h)) for lm in hnd.landmark]
-            try:
-                gesture_text = gesture_main.detect_gesture(img, lml, result)
-                st.session_state["hg_gesture"] = gesture_text
-                st.session_state["hg_n_hands"] = len(result.multi_hand_landmarks)
-            except: pass
+            st.session_state["hg_gesture"] = gesture_main.detect_gesture(img, lml, result)
+            st.session_state["hg_n_hands"] = len(result.multi_hand_landmarks)
+            mp.solutions.drawing_utils.draw_landmarks(img, hnd, mp_h.HAND_CONNECTIONS)
             
     return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# --- 5. YOUR ORIGINAL UI (RESORED EXACTLY) ---
+# 4. RESTORE UI STRUCTURE
+st.markdown('<div class="hg-topnav"><span class="hg-brand">MANUMOTION</span> / <span style="color:#5b5b7a">Hand Gesture Control</span></div>', unsafe_allow_html=True)
+if st.button("← Back to Home"): st.switch_page("app.py")
+
 if "hg_cam_on" not in st.session_state: st.session_state.hg_cam_on = False
-if "theme" not in st.session_state: st.session_state.theme = "dark"
-
-# Your original CSS block here...
-st.markdown(DARK_MODE_CSS, unsafe_allow_html=True) # Assuming DARK_MODE_CSS is defined exactly as in your paste
-
-# Your original top nav and home button logic...
-st.markdown("""<div class="hg-brand">MANUMOTION</div>""", unsafe_allow_html=True)
 
 if not st.session_state.hg_cam_on:
-    # Your original Permission Card UI
     if st.button("📷 Open Webcam & Start"):
         st.session_state.hg_cam_on = True
         st.rerun()
@@ -76,18 +75,16 @@ else:
     col_vid, col_side = st.columns([3, 1], gap="medium")
     with col_vid:
         st.markdown('<div class="vid-panel">', unsafe_allow_html=True)
-        # Replacing frame_ph with the streamer
         webrtc_streamer(
             key="hg-stream",
             video_frame_callback=video_frame_callback,
-            rtc_configuration=RTC_CONFIG,
-            media_stream_constraints={"video": True, "audio": False}
+            rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.services.mozilla.com"]}]},
+            media_stream_constraints={"video": True, "audio": False},
         )
         st.markdown('</div>', unsafe_allow_html=True)
     with col_side:
-        # Your original sidebar cards
-        st.markdown(f"<div class='sb-val'>{st.session_state.get('hg_n_hands', 0)}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='sb-gesture'>{st.session_state.get('hg_gesture', '—')}</div>", unsafe_allow_html=True)
-        if st.button("Stop Webcam"):
+        st.markdown(f"<div class='sb-card'><div class='sb-lbl'>Hands</div><div class='sb-val'>{st.session_state.get('hg_n_hands', 0)}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='sb-card'><div class='sb-lbl'>Active Gesture</div><div class='sb-val'>{st.session_state.get('hg_gesture', '—')}</div></div>", unsafe_allow_html=True)
+        if st.button("⏹ Stop Webcam"):
             st.session_state.hg_cam_on = False
             st.rerun()
