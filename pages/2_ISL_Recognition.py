@@ -9,6 +9,18 @@ import os
 import pygame
 from collections import deque
 
+
+#HANDLING pygame
+import sys
+from unittest.mock import MagicMock
+
+# Trick the app into thinking pygame exists on the cloud server
+try:
+    import pygame
+except ImportError:
+    sys.modules['pygame'] = MagicMock()
+
+
 st.set_page_config(
     page_title="ISL Recognition · MANUMOTION",
     page_icon="🤟",
