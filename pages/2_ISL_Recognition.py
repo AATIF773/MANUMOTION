@@ -1,3 +1,13 @@
+import sys
+from unittest.mock import MagicMock
+
+# Trick the cloud into ignoring pygame
+try:
+    import pygame
+except ImportError:
+    sys.modules['pygame'] = MagicMock()
+
+
 import streamlit as st
 import streamlit.components.v1 as components
 import cv2
