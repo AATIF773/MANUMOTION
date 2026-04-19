@@ -1,14 +1,16 @@
 import sys
 from unittest.mock import MagicMock
 
-# Trick the cloud into ignoring desktop-only libraries
 try:
     import pynput
     import pyautogui
 except ImportError:
+    mock_pyautogui = MagicMock()
+    # Provide fake screen dimensions so the code doesn't crash
+    mock_pyautogui.size.return_value = (1920, 1080) 
+    sys.modules['pyautogui'] = mock_pyautogui
     sys.modules['pynput'] = MagicMock()
     sys.modules['pynput.mouse'] = MagicMock()
-    sys.modules['pyautogui'] = MagicMock()
 
 
 import pyautogui
