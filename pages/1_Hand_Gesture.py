@@ -153,8 +153,7 @@ with col_back:
     if st.button("← Home", key="hg_back", use_container_width=True):
         st.switch_page("app.py")
 
-# --- WEB PROCESSING LOGIC (NEW REPLACEMENT FOR LOOP) ---
-# This is where the magic happens to make it work on the web
+# --- WEB PROCESSING LOGIC ---
 def video_frame_callback(frame):
     img = frame.to_ndarray(format="bgr24")
     img = cv2.flip(img, 1)
@@ -179,10 +178,8 @@ def video_frame_callback(frame):
         for lm in hnd.landmark:
             lml.append((int(lm.x * w), int(lm.y * h)))
         
-        # Use your custom logic
         gesture_text = gesture_main.detect_gesture(img, lml, result)
         
-    # Store results in session state for sidebar (UI update)
     st.session_state["n_hands"] = n_hands
     st.session_state["gesture_text"] = gesture_text
     
@@ -202,7 +199,7 @@ if not st.session_state.hg_cam_on:
         st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
         _, btn_col, _ = st.columns([1, 2, 1])
         with btn_col:
-            if st.button("📷   Open Webcam & Start", key="hg_start", use_container_width=True):
+            if st.button("📷    Open Webcam & Start", key="hg_start", use_container_width=True):
                 st.session_state.hg_cam_on = True
                 st.rerun()
 else:
@@ -213,20 +210,30 @@ else:
     with col_vid:
         st.markdown("""<div class="vid-panel"><div class="vid-hdr"><div class="live-dot"></div><span class="live-tag">Live Camera Feed</span></div></div>""", unsafe_allow_html=True)
         
-        # WEBRTC COMPONENT REPLACES CV2 LOOP
         webrtc_streamer(
             key="hand-gesture",
             mode=WebRtcMode.SENDRECV,
-            rtc_configuration=RTCConfiguration(
-                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-            ),
+            rtc_configuration={
+                "iceServers": [
+                    {"urls": ["stun:stun.l.google.com:19302"]},
+                    {"urls": ["stun:stun1.l.google.com:19302"]},
+                    {"urls": ["stun:stun2.l.google.com:19302"]}
+                ]
+            },
             video_frame_callback=video_frame_callback,
-            media_stream_constraints={"video": True, "audio": False},
+            # 🚀 STABILITY FIX: LOWER RESOLUTION TO STOP FREEZING
+            media_stream_constraints={
+                "video": {
+                    "width": {"ideal": 480},
+                    "height": {"ideal": 360},
+                    "frameRate": {"ideal": 15} 
+                },
+                "audio": False,
+            },
             async_processing=True,
         )
 
     with col_side:
-        # These now pull from session state updated by the callback
         n_hands = st.session_state.get("n_hands", 0)
         gesture_text = st.session_state.get("gesture_text", "—")
         
@@ -248,6 +255,6 @@ else:
 </div>
 """, unsafe_allow_html=True)
 
-        if st.button("⏹   Stop Webcam", key="hg_stop"):
+        if st.button("⏹    Stop Webcam", key="hg_stop"):
             st.session_state.hg_cam_on = False
             st.rerun()
