@@ -8,6 +8,15 @@ from datetime import datetime
 from pynput.mouse import Button, Controller
 import util  # util.py is in the same directory
 
+# HANDLING pyautogui
+import sys
+from unittest.mock import MagicMock
+
+# Trick the app into thinking pyautogui exists on the cloud server
+try:
+    import pyautogui
+except ImportError:
+    sys.modules['pyautogui'] = MagicMock()
 # ─────────────────────────────────────────────────────────────────
 # GLOBAL STATE FOR GESTURE LOGIC
 # ─────────────────────────────────────────────────────────────────
